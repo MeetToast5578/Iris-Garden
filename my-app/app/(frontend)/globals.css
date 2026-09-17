@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paper-warm neutrals keep product photography the brightest thing on screen. */
+  --color-paper: #faf7f2;
+  --color-paper-dim: #f2ede4;
+  --color-line: #e4ddd1;
+
+  --color-ink: #16241c;
+  --color-ink-soft: #55655a;
+
+  --color-moss: #2f4a38;
+  --color-sage: #9db49e;
+  --color-blush: #c97b74;
+  --color-petal: #f6e7e4;
+
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-petal);
+    color: var(--color-moss);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-moss);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  /* Tailwind v4 cannot @apply another custom class, so each button repeats the base. */
+  .btn,
+  .btn-primary,
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium
+           transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-moss text-paper hover:bg-ink;
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-transparent text-ink hover:border-moss hover:bg-paper-dim;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink
+           placeholder:text-ink-soft/60 focus:border-moss focus:outline-none;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-medium tracking-wide text-ink-soft uppercase;
+  }
+
+  .eyebrow {
+    @apply text-xs font-medium tracking-[0.18em] text-ink-soft uppercase;
+  }
+
+  .shell {
+    @apply mx-auto w-full max-w-[1280px] px-5 sm:px-8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
