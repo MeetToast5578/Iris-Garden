@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { imageOf } from '@/lib/media'
 import { getPayloadClient } from '@/lib/payload'
 
-/** Content comes from Payload, so re-render at most once a minute. */
-export const revalidate = 60
+/** Payload hooks purge this on save; the timer is only a backstop. */
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'About the studio',

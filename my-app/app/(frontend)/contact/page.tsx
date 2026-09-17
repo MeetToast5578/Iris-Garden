@@ -70,7 +70,9 @@ export default async function ContactPage({
           <form action={sendMessage} className="space-y-4">
             {error && (
               <p role="alert" className="rounded-xl bg-petal p-3 text-sm text-moss">
-                Please check your name, email and message and try again.
+                {error === 'rate'
+                  ? 'You have sent several messages already. Please call us instead.'
+                  : 'Please check your name, email and message and try again.'}
               </p>
             )}
             <div>

@@ -23,6 +23,8 @@ export function ProductCard({ product, priority }: { product: CardProduct; prior
             fill
             priority={priority}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+            placeholder={product.image.blurDataURL ? 'blur' : 'empty'}
+            blurDataURL={product.image.blurDataURL}
             className="object-cover transition-transform duration-700 ease-soft group-hover:scale-105"
           />
         ) : (

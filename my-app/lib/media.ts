@@ -1,6 +1,12 @@
 import type { Media } from '@/payload-types'
 
-type Sized = { src: string; alt: string; width: number; height: number }
+type Sized = {
+  src: string
+  alt: string
+  width: number
+  height: number
+  blurDataURL?: string
+}
 
 /**
  * Relationship fields come back as an id when the query depth is 0, so anything
@@ -23,6 +29,7 @@ export const imageOf = (
     alt: media.alt ?? '',
     width: variant?.width ?? media.width ?? 1200,
     height: variant?.height ?? media.height ?? 1600,
+    ...(media.blurDataURL ? { blurDataURL: media.blurDataURL } : {}),
   }
 }
 

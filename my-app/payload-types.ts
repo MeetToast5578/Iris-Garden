@@ -63,6 +63,7 @@ export type SupportedTimezones =
 
 export interface Config {
   auth: {
+    customers: CustomerAuthOperations;
     users: UserAuthOperations;
   };
   blocks: {};
@@ -71,6 +72,7 @@ export interface Config {
     categories: Category;
     media: Media;
     orders: Order;
+    customers: Customer;
     'contact-messages': ContactMessage;
     users: User;
     'payload-kv': PayloadKv;
@@ -84,6 +86,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -105,10 +108,28 @@ export interface Config {
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: Customer | User;
   jobs: {
     tasks: unknown;
     workflows: unknown;
+  };
+}
+export interface CustomerAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
   };
 }
 export interface UserAuthOperations {
@@ -213,6 +234,7 @@ export interface Product {
     | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -246,6 +268,7 @@ export interface Category {
  */
 export interface Media {
   id: number;
+  blurDataURL?: string | null;
   /**
    * Describe the image for screen readers and search engines.
    */
@@ -323,6 +346,10 @@ export interface Order {
    * In cents.
    */
   total: number;
+  /**
+   * Set when the order was placed by a signed-in customer.
+   */
+  user?: (number | null) | Customer;
   customer: {
     name: string;
     email: string;
@@ -341,6 +368,42 @@ export interface Order {
   };
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  name: string;
+  phone?: string | null;
+  /**
+   * Prefills checkout.
+   */
+  address?: string | null;
+  city?: string | null;
+  /**
+   * Set when the account was linked through Google sign-in.
+   */
+  googleId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -423,6 +486,10 @@ export interface PayloadLockedDocument {
         value: number | Order;
       } | null)
     | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
         relationTo: 'contact-messages';
         value: number | ContactMessage;
       } | null)
@@ -431,10 +498,15 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -444,10 +516,15 @@ export interface PayloadLockedDocument {
  */
 export interface PayloadPreference {
   id: number;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      }
+    | {
+        relationTo: 'users';
+        value: number | User;
+      };
   key?: string | null;
   value?:
     | {
@@ -497,6 +574,7 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -516,6 +594,7 @@ export interface CategoriesSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  blurDataURL?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -584,6 +663,7 @@ export interface OrdersSelect<T extends boolean = true> {
   subtotal?: T;
   deliveryFee?: T;
   total?: T;
+  user?: T;
   customer?:
     | T
     | {
@@ -606,6 +686,33 @@ export interface OrdersSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  address?: T;
+  city?: T;
+  googleId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -707,11 +814,19 @@ export interface Setting {
   freeDeliveryThreshold: number;
   deliveryNote?: string | null;
   /**
+   * Hour of the day (0–23, studio time) after which same-day delivery is no longer offered. The checkout date picker enforces this.
+   */
+  sameDayCutoffHour: number;
+  /**
    * Cities or districts offered in the checkout city field.
    */
   deliveryZones?:
     | {
         name: string;
+        /**
+         * In dollars. Leave blank to charge the standard fee above.
+         */
+        fee?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -736,10 +851,12 @@ export interface SettingsSelect<T extends boolean = true> {
   deliveryFee?: T;
   freeDeliveryThreshold?: T;
   deliveryNote?: T;
+  sameDayCutoffHour?: T;
   deliveryZones?:
     | T
     | {
         name?: T;
+        fee?: T;
         id?: T;
       };
   phone?: T;

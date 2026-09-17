@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -29,23 +30,15 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
       </div>
 
       <div className="shell flex h-18 items-center gap-6">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Iris Garden, home">
-          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" className="text-moss">
-            <path
-              d="M13 2c2.6 2.4 3.9 5 3.9 7.8 0 1.5-.4 2.9-1.2 4.2 2-1.4 4.2-2 6.6-1.8-.6 3.3-2.3 5.6-5 6.9-1.5.7-3 1-4.3.9V24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
-            <path
-              d="M13 20c-1.3.1-2.8-.2-4.3-.9-2.7-1.3-4.4-3.6-5-6.9 2.4-.2 4.6.4 6.6 1.8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
-          </svg>
+        <Link href="/" className="flex items-center gap-3" aria-label="Iris Garden, home">
+          <Image
+            src="/logo.png"
+            alt=""
+            width={44}
+            height={44}
+            priority
+            className="h-11 w-11 rounded-full object-cover ring-1 ring-line"
+          />
           <span className="font-display text-xl tracking-tight">Iris Garden</span>
         </Link>
 
@@ -86,6 +79,22 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
             </a>
           )}
 
+          <Link
+            href="/account"
+            className="rounded-full p-2.5 transition-colors hover:bg-paper-dim"
+            aria-label="Your account"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="none">
+              <circle cx="10" cy="7" r="3.2" stroke="currentColor" strokeWidth="1.3" />
+              <path
+                d="M4 16.5c.8-2.6 3.1-4 6-4s5.2 1.4 6 4"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+            </svg>
+          </Link>
+
           <button
             type="button"
             onClick={open}
@@ -101,7 +110,7 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
               <path d="M7 6a3 3 0 016 0" stroke="currentColor" strokeWidth="1.3" />
             </svg>
             {count > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blush px-1 text-[10px] font-medium text-paper tabular-nums">
+              <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-iris px-1 text-[10px] font-medium text-paper tabular-nums">
                 {count}
               </span>
             )}
@@ -146,6 +155,13 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/account"
+                onClick={() => setMenuOpen(false)}
+                className="border-b border-line/70 py-3 text-base last:border-0"
+              >
+                Your account
+              </Link>
             </nav>
           </div>
         </div>

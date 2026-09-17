@@ -10,7 +10,7 @@ export type CardProduct = {
   shortDescription: string
   /** cents */
   price: number
-  image: { src: string; alt: string; width: number; height: number } | null
+  image: ReturnType<typeof firstImage>
   inStock: boolean
   /** cards with sizes send you to the product page instead of quick-adding */
   hasSizes: boolean

@@ -3,18 +3,22 @@
 import { redirect } from 'next/navigation'
 
 import { getPayloadClient } from '@/lib/payload'
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import { withinRateLimit } from '@/lib/rateLimit'
+import { isValidEmail } from '@/lib/validate'
 
 /** Plain form action, so the contact form still works with JavaScript off. */
 export async function sendMessage(formData: FormData) {
+  if (!(await withinRateLimit('contact', { max: 5, windowMs: 60 * 60 * 1000 }))) {
+    redirect('/contact?error=rate')
+  }
+
   const value = (name: string) => String(formData.get(name) ?? '').trim()
 
   const name = value('name')
   const email = value('email')
   const message = value('message')
 
-  if (!name || !EMAIL.test(email) || message.length < 2) {
+  if (!name || !isValidEmail(email) || message.length < 2) {
     redirect('/contact?error=1')
   }
 

@@ -1,5 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
+import { revalidatePaths } from '../lib/revalidate'
+
 const isAdmin = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
 
 export const Settings: GlobalConfig = {
@@ -7,6 +9,11 @@ export const Settings: GlobalConfig = {
   label: 'Store Settings',
   admin: { group: 'Admin' },
   access: { read: () => true, update: isAdmin },
+  hooks: {
+    afterChange: [
+      () => void revalidatePaths(['/', '/shop', '/delivery', '/about', '/contact', '/checkout']),
+    ],
+  },
   fields: [
     {
       type: 'tabs',
@@ -57,9 +64,32 @@ export const Settings: GlobalConfig = {
               defaultValue: 'Same-day delivery on orders placed before 2pm.',
             },
             {
+              name: 'sameDayCutoffHour',
+              type: 'number',
+              required: true,
+              defaultValue: 14,
+              min: 0,
+              max: 23,
+              admin: {
+                description:
+                  'Hour of the day (0–23, studio time) after which same-day delivery is no longer offered. The checkout date picker enforces this.',
+              },
+            },
+            {
               name: 'deliveryZones',
               type: 'array',
-              fields: [{ name: 'name', type: 'text', required: true }],
+              fields: [
+                { name: 'name', type: 'text', required: true },
+                {
+                  name: 'fee',
+                  type: 'number',
+                  min: 0,
+                  admin: {
+                    step: 0.01,
+                    description: 'In dollars. Leave blank to charge the standard fee above.',
+                  },
+                },
+              ],
               admin: { description: 'Cities or districts offered in the checkout city field.' },
             },
           ],

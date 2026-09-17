@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from 'react'
 
+import { MAX_QUANTITY } from './validate'
+
 export type CartItem = {
   /** product id plus size, so the same bouquet in two sizes stays two lines */
   key: string
@@ -73,6 +75,9 @@ const subscribe = (listener: () => void) => {
 const getSnapshot = () => state
 const getServerSnapshot = () => EMPTY
 
+/** Every caller goes through this, so the cap cannot be forgotten in one of them. */
+const clampQuantity = (quantity: number) => Math.min(MAX_QUANTITY, Math.max(1, Math.floor(quantity)))
+
 export const cart = {
   add(item: Omit<CartItem, 'key' | 'quantity'>, quantity = 1) {
     const key = `${item.productId}:${item.size ?? ''}`
@@ -81,9 +86,11 @@ export const cart = {
     update({
       items: existing
         ? state.items.map((line) =>
-            line.key === key ? { ...line, quantity: line.quantity + quantity } : line,
+            line.key === key
+              ? { ...line, quantity: clampQuantity(line.quantity + quantity) }
+              : line,
           )
-        : [...state.items, { ...item, key, quantity }],
+        : [...state.items, { ...item, key, quantity: clampQuantity(quantity) }],
       isOpen: true,
     })
   },
@@ -93,7 +100,21 @@ export const cart = {
       items:
         quantity <= 0
           ? state.items.filter((line) => line.key !== key)
-          : state.items.map((line) => (line.key === key ? { ...line, quantity } : line)),
+          : state.items.map((line) =>
+              line.key === key ? { ...line, quantity: clampQuantity(quantity) } : line,
+            ),
+    })
+  },
+
+  /** Adopt server-side prices after checkout reports that something drifted. */
+  reprice(lines: { productId: number; size: string | null; unitPrice: number }[]) {
+    update({
+      items: state.items.map((line) => {
+        const match = lines.find(
+          (priced) => priced.productId === line.productId && (priced.size ?? null) === line.size,
+        )
+        return match ? { ...line, unitPrice: match.unitPrice } : line
+      }),
     })
   },
 

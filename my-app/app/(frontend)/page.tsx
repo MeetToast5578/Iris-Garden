@@ -22,8 +22,8 @@ const promises = [
   },
 ]
 
-/** Content comes from Payload, so re-render at most once a minute. */
-export const revalidate = 60
+/** Payload hooks purge this on save; the timer is only a backstop. */
+export const revalidate = 3600
 
 export default async function HomePage() {
   const payload = await getPayloadClient()
@@ -74,6 +74,8 @@ export default async function HomePage() {
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 640px"
+              placeholder={hero.blurDataURL ? 'blur' : 'empty'}
+              blurDataURL={hero.blurDataURL}
               className="object-cover"
             />
           ) : (

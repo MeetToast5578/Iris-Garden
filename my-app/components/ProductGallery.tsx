@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 
-type Shot = { src: string; alt: string }
+type Shot = { src: string; alt: string; blurDataURL?: string }
 
 export function ProductGallery({ images, title }: { images: Shot[]; title: string }) {
   const [active, setActive] = useState(0)
@@ -19,6 +19,8 @@ export function ProductGallery({ images, title }: { images: Shot[]; title: strin
             fill
             priority
             sizes="(max-width: 1024px) 100vw, 560px"
+            placeholder={current.blurDataURL ? 'blur' : 'empty'}
+            blurDataURL={current.blurDataURL}
             className="object-cover"
           />
         ) : (

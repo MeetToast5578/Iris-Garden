@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { revalidatePaths } from '../lib/revalidate'
 import { slugField } from '../lib/slugField'
 
 const isAdmin = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
@@ -18,6 +19,10 @@ export const Categories: CollectionConfig = {
     delete: isAdmin,
   },
   defaultSort: 'order',
+  hooks: {
+    afterChange: [({ doc }) => void revalidatePaths(['/', '/shop', `/shop/${doc.slug}`])],
+    afterDelete: [({ doc }) => void revalidatePaths(['/', '/shop', `/shop/${doc.slug}`])],
+  },
   fields: [
     { name: 'title', type: 'text', required: true },
     slugField(),

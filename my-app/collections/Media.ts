@@ -21,7 +21,30 @@ export const Media: CollectionConfig = {
       { name: 'hero', width: 1920, height: 1080, position: 'centre' },
     ],
   },
+  hooks: {
+    beforeChange: [
+      async ({ data, req }) => {
+        // Generated once at upload time; rendering it per request would mean
+        // re-reading the original file on every page view.
+        if (req.file?.data) {
+          const sharp = (await import('sharp')).default
+          const tiny = await sharp(req.file.data)
+            .resize(16, 16, { fit: 'inside' })
+            .blur(1)
+            .jpeg({ quality: 40 })
+            .toBuffer()
+          data.blurDataURL = `data:image/jpeg;base64,${tiny.toString('base64')}`
+        }
+        return data
+      },
+    ],
+  },
   fields: [
+    {
+      name: 'blurDataURL',
+      type: 'text',
+      admin: { hidden: true, readOnly: true },
+    },
     {
       name: 'alt',
       type: 'text',

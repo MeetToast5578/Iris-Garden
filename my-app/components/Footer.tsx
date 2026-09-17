@@ -67,6 +67,8 @@ export function Footer({
               { href: '/delivery', label: 'Delivery & payment' },
               { href: '/about', label: 'About the studio' },
               { href: '/contact', label: 'Contact us' },
+              { href: '/order/lookup', label: 'Track an order' },
+              { href: '/account', label: 'Your account' },
             ].map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="text-ink-soft transition-colors hover:text-moss">

@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { formatPrice, toCents } from '@/lib/money'
 import { getPayloadClient } from '@/lib/payload'
 
-/** Content comes from Payload, so re-render at most once a minute. */
-export const revalidate = 60
+/** Payload hooks purge this on save; the timer is only a backstop. */
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Delivery & payment',

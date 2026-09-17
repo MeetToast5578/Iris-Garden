@@ -1,5 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
+import { orderConfirmationEmail } from '../lib/orderEmail'
+import { isValidPhone } from '../lib/validate'
+
 /**
  * Orders are written by the checkout server action through the Local API,
  * which bypasses access control. Keeping every operation admin-only here
@@ -24,12 +27,29 @@ export const Orders: CollectionConfig = {
     group: 'Shop',
   },
   access: {
-    read: isAdmin,
+    // Customers may read their own orders through the API, not just via server code.
+    read: ({ req: { user } }) => {
+      if (user?.collection === 'users') return true
+      if (user?.collection === 'customers') return { user: { equals: user.id } }
+      return false
+    },
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
   },
   hooks: {
+    afterChange: [
+      async ({ doc, operation, req }) => {
+        if (operation !== 'create') return
+        try {
+          const { subject, html } = orderConfirmationEmail(doc)
+          await req.payload.sendEmail({ to: doc.customer.email, subject, html })
+        } catch (error) {
+          // A failed confirmation email must never lose the order itself.
+          req.payload.logger.error({ err: error }, 'Order confirmation email failed')
+        }
+      },
+    ],
     beforeChange: [
       ({ data, operation }) => {
         if (operation === 'create' && !data.orderNumber) {
@@ -93,12 +113,27 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
+      name: 'user',
+      type: 'relationship',
+      relationTo: 'customers',
+      admin: {
+        position: 'sidebar',
+        description: 'Set when the order was placed by a signed-in customer.',
+      },
+    },
+    {
       name: 'customer',
       type: 'group',
       fields: [
         { name: 'name', type: 'text', required: true },
         { name: 'email', type: 'email', required: true },
-        { name: 'phone', type: 'text', required: true },
+        {
+          name: 'phone',
+          type: 'text',
+          required: true,
+          validate: (value: unknown) =>
+            isValidPhone(String(value ?? '')) || 'Enter a phone number the courier can call.',
+        },
       ],
     },
     {

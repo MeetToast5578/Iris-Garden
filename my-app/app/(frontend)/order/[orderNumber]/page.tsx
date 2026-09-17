@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { getCurrentCustomer } from '@/lib/auth'
+import { ORDER_COOKIE } from '@/lib/orderCookie'
 import { formatPrice } from '@/lib/money'
 import { getPayloadClient } from '@/lib/payload'
 
@@ -18,21 +20,26 @@ export default async function OrderPage({
 }) {
   const { orderNumber } = await params
 
-  // Only the browser that placed the order holds this cookie, so order
-  // numbers cannot be walked to read someone else's delivery address.
-  const cookie = (await cookies()).get('iris-order')?.value
-  if (cookie !== orderNumber) notFound()
-
   const payload = await getPayloadClient()
   const result = await payload.find({
     collection: 'orders',
     where: { orderNumber: { equals: orderNumber } },
     limit: 1,
     depth: 0,
+    overrideAccess: true,
   })
 
   const order = result.docs[0]
   if (!order) notFound()
+
+  // Two ways to be allowed in: the cookie set when this browser placed (or
+  // looked up) the order, or being signed in as the customer who owns it.
+  // Otherwise order numbers could be walked to read delivery addresses.
+  const cookie = (await cookies()).get(ORDER_COOKIE)?.value
+  const customer = await getCurrentCustomer()
+  const ownerId = typeof order.user === 'object' ? order.user?.id : order.user
+
+  if (cookie !== orderNumber && !(customer && ownerId === customer.id)) notFound()
 
   return (
     <div className="shell max-w-2xl py-20">
@@ -91,9 +98,14 @@ export default async function OrderPage({
         </p>
       )}
 
-      <Link href="/shop" className="btn-secondary mt-10">
-        Keep browsing
-      </Link>
+      <div className="mt-10 flex flex-wrap gap-3">
+        <Link href="/shop" className="btn-secondary">
+          Keep browsing
+        </Link>
+        <Link href="/order/lookup" className="btn-secondary">
+          Find this order later
+        </Link>
+      </div>
     </div>
   )
 }

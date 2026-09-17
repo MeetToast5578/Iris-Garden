@@ -4,6 +4,7 @@ import { Fraunces, Geist } from 'next/font/google'
 import { CartDrawer } from '@/components/CartDrawer'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { toCents } from '@/lib/money'
 import { getPayloadClient } from '@/lib/payload'
 
 import './globals.css'
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Iris Garden',
     url: siteUrl,
+    images: ['/logo.png'],
   },
 }
 
@@ -58,7 +60,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
           openingHours={settings.openingHours ?? undefined}
           instagram={settings.instagram ?? undefined}
         />
-        <CartDrawer />
+        <CartDrawer freeDeliveryThreshold={toCents(settings.freeDeliveryThreshold ?? 0)} />
       </body>
     </html>
   )

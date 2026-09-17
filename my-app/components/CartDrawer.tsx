@@ -9,7 +9,7 @@ import { formatPrice } from '@/lib/money'
 
 
 /** Native <dialog> gives us the focus trap, the Escape key and the backdrop for free. */
-export function CartDrawer() {
+export function CartDrawer({ freeDeliveryThreshold = 0 }: { freeDeliveryThreshold?: number }) {
   const { items, isOpen, close, setQuantity, remove, subtotal } = useCart()
   const dialogRef = useRef<HTMLDialogElement>(null)
 
@@ -117,7 +117,15 @@ export function CartDrawer() {
               <span className="text-ink-soft">Subtotal</span>
               <span className="font-display text-2xl tabular-nums">{formatPrice(subtotal)}</span>
             </div>
-            <p className="mt-1 text-xs text-ink-soft">Delivery is calculated at checkout.</p>
+            {freeDeliveryThreshold > 0 && subtotal < freeDeliveryThreshold ? (
+              <p className="mt-1 text-xs text-ink-soft">
+                {formatPrice(freeDeliveryThreshold - subtotal)} more for free delivery.
+              </p>
+            ) : freeDeliveryThreshold > 0 ? (
+              <p className="mt-1 text-xs text-moss">Delivery is free on this order.</p>
+            ) : (
+              <p className="mt-1 text-xs text-ink-soft">Delivery is calculated at checkout.</p>
+            )}
             <Link href="/checkout" onClick={close} className="btn-primary mt-4 w-full">
               Checkout
             </Link>

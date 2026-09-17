@@ -1,8 +1,10 @@
+import type { Where } from 'payload'
+
 import Link from 'next/link'
 
 import { getPayloadClient } from '@/lib/payload'
 import { toCard } from '@/lib/product'
-import { PAGE_SIZE, pageFor, sortFor, whereFor, type ShopParams } from '@/lib/shop'
+import { buildPriceBands, PAGE_SIZE, pageFor, sortFor, whereFor, type ShopParams } from '@/lib/shop'
 
 import { ProductCard } from './ProductCard'
 import { ShopFilters } from './ShopFilters'
@@ -29,18 +31,29 @@ export async function ShopResults({
   const payload = await getPayloadClient()
   const page = pageFor(params.page)
 
-  const results = await payload.find({
-    collection: 'products',
-    where: whereFor(params, categoryId),
-    sort: sortFor(params.sort),
-    limit: PAGE_SIZE,
-    page,
-    depth: 1,
-  })
+  const scope: Where = categoryId ? { category: { equals: categoryId } } : {}
+
+  const [results, cheapest, dearest] = await Promise.all([
+    payload.find({
+      collection: 'products',
+      where: whereFor(params, categoryId),
+      sort: sortFor(params.sort),
+      limit: PAGE_SIZE,
+      page,
+      depth: 1,
+    }),
+    payload.find({ collection: 'products', where: scope, sort: 'price', limit: 1, depth: 0 }),
+    payload.find({ collection: 'products', where: scope, sort: '-price', limit: 1, depth: 0 }),
+  ])
+
+  const priceBands = buildPriceBands(
+    cheapest.docs[0]?.price ?? 0,
+    dearest.docs[0]?.price ?? 0,
+  )
 
   return (
     <>
-      <ShopFilters resultCount={results.totalDocs} />
+      <ShopFilters resultCount={results.totalDocs} priceBands={priceBands} />
 
       {results.docs.length === 0 ? (
         <div className="py-24 text-center">

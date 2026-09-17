@@ -12,7 +12,11 @@
   --color-moss: #2f4a38;
   --color-sage: #9db49e;
   --color-blush: #c97b74;
-  --color-petal: #f6e7e4;
+  --color-petal: #f0e9f7;
+
+  /* Sampled from the studio logo. */
+  --color-iris: #5f2f8f;
+  --color-gold: #c9a227;
 
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -34,7 +38,7 @@
 
   ::selection {
     background-color: var(--color-petal);
-    color: var(--color-moss);
+    color: var(--color-iris);
   }
 
   :focus-visible {

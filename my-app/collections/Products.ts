@@ -1,9 +1,16 @@
 import type { CollectionConfig } from 'payload'
 
 import { OCCASIONS } from '../lib/occasions'
+import { revalidatePaths } from '../lib/revalidate'
 import { slugField } from '../lib/slugField'
 
 const isAdmin = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+
+const categorySlugOf = (category: unknown) =>
+  category && typeof category === 'object' ? (category as { slug?: string }).slug : undefined
+
+const purge = (doc: { slug?: string; category?: unknown }) =>
+  revalidatePaths(['/', '/shop', doc.slug && `/product/${doc.slug}`, categorySlugOf(doc.category) && `/shop/${categorySlugOf(doc.category)}`])
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -12,11 +19,19 @@ export const Products: CollectionConfig = {
     defaultColumns: ['title', 'category', 'price', 'inStock', 'featured'],
     group: 'Shop',
   },
+  versions: {
+    drafts: { autosave: false },
+    maxPerDoc: 10,
+  },
   access: {
     read: () => true,
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [({ doc }) => void purge(doc)],
+    afterDelete: [({ doc }) => void purge(doc)],
   },
   fields: [
     { name: 'title', type: 'text', required: true },

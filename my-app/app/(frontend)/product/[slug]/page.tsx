@@ -14,6 +14,17 @@ import { toCard } from '@/lib/product'
 
 type Props = { params: Promise<{ slug: string }> }
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+/** Prerender every product; Payload hooks purge them when an admin saves. */
+export async function generateStaticParams() {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({ collection: 'products', limit: 500, depth: 0 })
+  return docs.map((product) => ({ slug: product.slug }))
+}
+
+export const revalidate = 3600
+
 const findProduct = async (slug: string) => {
   const payload = await getPayloadClient()
   const result = await payload.find({
@@ -71,8 +82,42 @@ export default async function ProductPage({ params }: Props) {
     price: basePrice + toCents(size.priceDelta ?? 0),
   }))
 
+  // Structured data is what puts the price and the in-stock badge on the
+  // Google result rather than a bare blue link.
+  const offer =
+    sizes.length > 0
+      ? {
+          '@type': 'AggregateOffer',
+          lowPrice: (Math.min(...sizes.map((size) => size.price)) / 100).toFixed(2),
+          highPrice: (Math.max(...sizes.map((size) => size.price)) / 100).toFixed(2),
+          offerCount: sizes.length,
+        }
+      : { '@type': 'Offer', price: (basePrice / 100).toFixed(2) }
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.shortDescription,
+    image: images.map((image) => new URL(image.src, siteUrl).toString()),
+    brand: { '@type': 'Brand', name: 'Iris Garden' },
+    ...(category ? { category: category.title } : {}),
+    offers: {
+      ...offer,
+      priceCurrency: 'USD',
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url: `${siteUrl}/product/${product.slug}`,
+    },
+  }
+
   return (
     <div className="shell py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav aria-label="Breadcrumb" className="text-sm text-ink-soft">
         <Link href="/shop" className="hover:text-moss">
           Shop

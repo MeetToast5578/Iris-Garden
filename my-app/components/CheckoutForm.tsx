@@ -6,29 +6,44 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
 import { placeOrder } from '@/app/(frontend)/checkout/actions'
-import { useCart } from '@/lib/cart'
+import { cart, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/money'
+import { PHONE_INPUT_PATTERN } from '@/lib/validate'
 
 const TIME_SLOTS = ['09:00 – 12:00', '12:00 – 15:00', '15:00 – 18:00', '18:00 – 21:00']
+
+export type CheckoutZone = { name: string; fee: number | null }
 
 type Props = {
   deliveryFee: number
   freeDeliveryThreshold: number
-  zones: string[]
+  zones: CheckoutZone[]
   pickupAddress?: string
+  /** earliest date the studio can still deliver on, YYYY-MM-DD */
+  earliestDate: string
+  customer: { name: string; email: string; phone: string; address: string; city: string } | null
 }
 
-export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickupAddress }: Props) {
+export function CheckoutForm({
+  deliveryFee,
+  freeDeliveryThreshold,
+  zones,
+  pickupAddress,
+  earliestDate,
+  customer,
+}: Props) {
   const { items, subtotal, clear } = useCart()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [pricesChanged, setPricesChanged] = useState(false)
   const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery')
+  const [city, setCity] = useState(customer?.city || zones[0]?.name || '')
 
   const freeDelivery = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold
-  const fee = method === 'pickup' || freeDelivery ? 0 : deliveryFee
+  const zoneFee = zones.find((zone) => zone.name === city)?.fee
+  const fee = method === 'pickup' || freeDelivery ? 0 : (zoneFee ?? deliveryFee)
   const total = subtotal + fee
-  const today = new Date().toISOString().slice(0, 10)
 
   if (items.length === 0) {
     return (
@@ -54,6 +69,7 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
           productId: line.productId,
           size: line.size,
           quantity: line.quantity,
+          expectedUnitPrice: line.unitPrice,
         })),
         customer: {
           name: value('name'),
@@ -74,6 +90,12 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
       })
 
       if (!result.ok) {
+        // Adopt the real prices so the summary matches the server before the
+        // customer confirms again — never charge a total they have not seen.
+        if (result.repriced?.length) {
+          cart.reprice(result.repriced)
+          setPricesChanged(true)
+        }
         setError(result.error)
         return
       }
@@ -95,6 +117,18 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
   return (
     <form onSubmit={onSubmit} className="mt-10 grid gap-12 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
       <div className="space-y-10">
+        {!customer && (
+          <p className="rounded-2xl border border-line bg-paper-dim p-4 text-sm text-ink-soft">
+            <Link
+              href="/account/login?redirectTo=/checkout"
+              className="text-moss underline underline-offset-4"
+            >
+              Sign in
+            </Link>{' '}
+            to fill this in automatically and keep track of your orders — or carry on as a guest.
+          </p>
+        )}
+
         <fieldset>
           <legend className="font-display text-2xl">Your details</legend>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -102,7 +136,14 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
               <label className="label" htmlFor="name">
                 Full name
               </label>
-              <input id="name" name="name" required autoComplete="name" className="field" />
+              <input
+                id="name"
+                name="name"
+                required
+                autoComplete="name"
+                defaultValue={customer?.name}
+                className="field"
+              />
             </div>
             <div>
               <label className="label" htmlFor="email">
@@ -114,6 +155,7 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
                 type="email"
                 required
                 autoComplete="email"
+                defaultValue={customer?.email}
                 className="field"
               />
             </div>
@@ -126,7 +168,9 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
                 name="phone"
                 type="tel"
                 required
+                pattern={PHONE_INPUT_PATTERN}
                 autoComplete="tel"
+                defaultValue={customer?.phone}
                 className="field"
               />
             </div>
@@ -172,6 +216,7 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
                     name="address"
                     required
                     autoComplete="street-address"
+                    defaultValue={customer?.address}
                     placeholder="Street, building, apartment"
                     className="field"
                   />
@@ -181,15 +226,31 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
                     City
                   </label>
                   {zones.length > 0 ? (
-                    <select id="city" name="city" className="field" defaultValue={zones[0]}>
+                    <select
+                      id="city"
+                      name="city"
+                      className="field"
+                      value={city}
+                      onChange={(event) => setCity(event.target.value)}
+                    >
                       {zones.map((zone) => (
-                        <option key={zone} value={zone}>
-                          {zone}
+                        <option key={zone.name} value={zone.name}>
+                          {zone.name}
+                          {zone.fee !== null && zone.fee !== deliveryFee
+                            ? ` — ${zone.fee === 0 ? 'free delivery' : formatPrice(zone.fee)}`
+                            : ''}
                         </option>
                       ))}
                     </select>
                   ) : (
-                    <input id="city" name="city" className="field" autoComplete="address-level2" />
+                    <input
+                      id="city"
+                      name="city"
+                      className="field"
+                      autoComplete="address-level2"
+                      value={city}
+                      onChange={(event) => setCity(event.target.value)}
+                    />
                   )}
                 </div>
               </>
@@ -199,7 +260,7 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
               <label className="label" htmlFor="date">
                 Preferred date
               </label>
-              <input id="date" name="date" type="date" min={today} className="field" />
+              <input id="date" name="date" type="date" min={earliestDate} className="field" />
             </div>
             <div>
               <label className="label" htmlFor="timeSlot">
@@ -230,7 +291,13 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
               <label className="label" htmlFor="recipientPhone">
                 Recipient phone
               </label>
-              <input id="recipientPhone" name="recipientPhone" type="tel" className="field" />
+              <input
+                id="recipientPhone"
+                name="recipientPhone"
+                type="tel"
+                pattern={PHONE_INPUT_PATTERN}
+                className="field"
+              />
             </div>
             <div className="sm:col-span-2">
               <label className="label" htmlFor="giftMessage">
@@ -302,11 +369,16 @@ export function CheckoutForm({ deliveryFee, freeDeliveryThreshold, zones, pickup
           {error && (
             <p role="alert" className="mt-4 rounded-xl bg-petal p-3 text-sm text-moss">
               {error}
+              {pricesChanged && (
+                <span className="mt-1 block text-xs">
+                  The summary above now shows the current prices.
+                </span>
+              )}
             </p>
           )}
 
           <button type="submit" disabled={pending} className="btn-primary mt-5 w-full">
-            {pending ? 'Placing order…' : 'Place order'}
+            {pending ? 'Placing order…' : pricesChanged ? 'Confirm at new price' : 'Place order'}
           </button>
         </div>
       </aside>

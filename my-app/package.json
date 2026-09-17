@@ -12,10 +12,11 @@
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "seed": "payload run ./scripts/seed.ts",
-    "check": "payload run ./scripts/check-checkout.ts"
+    "check": "payload run ./scripts/check-lib.ts && payload run ./scripts/check-checkout.ts"
   },
   "dependencies": {
     "@payloadcms/db-sqlite": "^3.89.0",
+    "@payloadcms/email-nodemailer": "^3.89.0",
     "@payloadcms/next": "^3.89.0",
     "@payloadcms/richtext-lexical": "^3.89.0",
     "@payloadcms/ui": "^3.89.0",

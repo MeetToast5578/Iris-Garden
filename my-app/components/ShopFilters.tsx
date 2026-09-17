@@ -3,12 +3,18 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { OCCASIONS } from '@/lib/occasions'
-import { PRICE_BANDS, SORT_OPTIONS } from '@/lib/shop'
+import { SORT_OPTIONS, type PriceBand } from '@/lib/shop'
 
 const chipBase =
   'inline-block rounded-full border px-4 py-2 text-sm transition-colors cursor-pointer'
 
-export function ShopFilters({ resultCount }: { resultCount: number }) {
+export function ShopFilters({
+  resultCount,
+  priceBands,
+}: {
+  resultCount: number
+  priceBands: PriceBand[]
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -51,9 +57,10 @@ export function ShopFilters({ resultCount }: { resultCount: number }) {
         ))}
       </div>
 
+      {priceBands.length > 0 && (
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <span className="eyebrow mr-2">Price</span>
-        {PRICE_BANDS.map((option) => (
+        {priceBands.map((option) => (
           <button
             key={option.value}
             type="button"
@@ -65,6 +72,7 @@ export function ShopFilters({ resultCount }: { resultCount: number }) {
           </button>
         ))}
       </div>
+      )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-ink-soft">
