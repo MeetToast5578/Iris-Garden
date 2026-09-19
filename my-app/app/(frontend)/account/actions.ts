@@ -6,15 +6,11 @@ import { redirect } from 'next/navigation'
 import { endSession, getCurrentCustomer, setSessionCookie } from '@/lib/auth'
 import { getPayloadClient } from '@/lib/payload'
 import { withinRateLimit } from '@/lib/rateLimit'
-import { isStrongEnoughPassword, isValidEmail, isValidPhone } from '@/lib/validate'
+import { isStrongEnoughPassword, isValidEmail, isValidPhone, safeRedirect } from '@/lib/validate'
 
 export type AuthResult = { ok: true } | { ok: false; error: string }
 
 const field = (form: FormData, name: string) => String(form.get(name) ?? '').trim()
-
-/** Only ever send people to paths on this site. */
-const safeRedirect = (value: string | null | undefined) =>
-  value && value.startsWith('/') && !value.startsWith('//') ? value : '/account'
 
 export async function register(_state: AuthResult | null, form: FormData): Promise<AuthResult> {
   if (!(await withinRateLimit('register', { max: 5, windowMs: 60 * 60 * 1000 }))) {

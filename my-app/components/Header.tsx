@@ -22,6 +22,10 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
   const pathname = usePathname()
 
   const categoryLinks = categories.map((c) => ({ href: `/shop/${c.slug}`, label: c.title }))
+  // ponytail: path only; keeping ?query too needs useSearchParams plus a Suspense boundary.
+  const accountHref = pathname.startsWith('/account')
+    ? '/account'
+    : `/account?redirectTo=${encodeURIComponent(pathname)}`
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md">
@@ -80,7 +84,7 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
           )}
 
           <Link
-            href="/account"
+            href={accountHref}
             className="rounded-full p-2.5 transition-colors hover:bg-paper-dim"
             aria-label="Your account"
           >
@@ -136,7 +140,10 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
       </div>
 
       {menuOpen && (
-        <div id="mobile-menu" className="border-t border-line bg-paper lg:hidden">
+        <div
+          id="mobile-menu"
+          className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-line bg-paper sm:max-h-[calc(100dvh-6.5rem)] lg:hidden"
+        >
           <div className="shell py-5">
             <form action="/shop" role="search" className="mb-4">
               <label htmlFor="mobile-search" className="sr-only">
@@ -156,7 +163,7 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
                 </Link>
               ))}
               <Link
-                href="/account"
+                href={accountHref}
                 onClick={() => setMenuOpen(false)}
                 className="border-b border-line/70 py-3 text-base last:border-0"
               >

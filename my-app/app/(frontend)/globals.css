@@ -29,6 +29,13 @@
     scroll-behavior: smooth;
   }
 
+  /* The open mobile menu scrolls on its own; the page behind it stays put. */
+  @media (width < 64rem) {
+    html:has(#mobile-menu) {
+      overflow: hidden;
+    }
+  }
+
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);

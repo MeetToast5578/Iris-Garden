@@ -6,14 +6,23 @@ import { PasswordForm, ProfileForm } from '@/components/AccountForms'
 import { getCurrentCustomer } from '@/lib/auth'
 import { formatPrice } from '@/lib/money'
 import { getPayloadClient } from '@/lib/payload'
+import { safeRedirect } from '@/lib/validate'
 
 import { signOut } from './actions'
 
 export const metadata: Metadata = { title: 'Your account', robots: { index: false } }
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirectTo?: string }>
+}) {
   const customer = await getCurrentCustomer()
-  if (!customer) redirect('/account/login?redirectTo=/account')
+  if (!customer) {
+    // The header passes the page you were on, so signing in takes you back there.
+    const { redirectTo } = await searchParams
+    redirect(`/account/login?redirectTo=${encodeURIComponent(safeRedirect(redirectTo))}`)
+  }
 
   const payload = await getPayloadClient()
   const orders = await payload.find({

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 
 export function GoogleButton({ redirectTo, label }: { redirectTo?: string; label: string }) {
   const href = redirectTo
@@ -6,7 +5,7 @@ export function GoogleButton({ redirectTo, label }: { redirectTo?: string; label
     : '/auth/google'
 
   return (
-    <Link href={href} prefetch={false} className="btn-secondary w-full">
+    <a href={href} className="btn-secondary w-full">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path
           fill="#4285F4"
@@ -26,6 +25,6 @@ export function GoogleButton({ redirectTo, label }: { redirectTo?: string; label
         />
       </svg>
       {label}
-    </Link>
+    </a>
   )
 }

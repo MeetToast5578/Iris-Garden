@@ -1,11 +1,14 @@
 import { cookies, headers as nextHeaders } from 'next/headers'
 import {
+  createLocalReq,
   generateExpiredPayloadCookie,
   generatePayloadCookie,
   getFieldsToSign,
   jwtSign,
+  logoutOperation,
   type Payload,
 } from 'payload'
+import { addSessionToUser } from 'payload/shared'
 
 import type { Customer } from '@/payload-types'
 
@@ -28,16 +31,26 @@ export const getCurrentCustomer = async (): Promise<Customer | null> => {
 /**
  * Issues Payload's own session cookie for a customer.
  *
- * Used by password login and by the Google callback, which has no password to
- * hand to payload.login(). Both paths mint the same token through Payload's
- * exported helpers rather than rolling their own JWT.
+ * Used by the Google callback, which has no password to hand to payload.login().
+ * Mirrors what login does: records a session on the customer and signs its id
+ * into the token, because Payload rejects tokens without a known session.
  */
 export const startSession = async (payload: Payload, customer: { id: number; email: string }) => {
   const collectionConfig = payload.collections[CUSTOMERS].config
+  const req = await createLocalReq({}, payload)
+
+  // The raw row, so existing sessions on other devices survive the write.
+  const user = await payload.db.findOne({
+    collection: CUSTOMERS,
+    req,
+    where: { id: { equals: customer.id } },
+  })
+  const { sid } = await addSessionToUser({ collectionConfig, payload, req, user: user as never })
 
   const fieldsToSign = getFieldsToSign({
     collectionConfig,
     email: customer.email,
+    sid,
     user: { ...customer, collection: CUSTOMERS } as never,
   })
 
@@ -73,6 +86,15 @@ export const setSessionCookie = async (payload: Payload, token: string) => {
 }
 
 export const endSession = async (payload: Payload) => {
+  // Revoke the session too, so a copied token stops working after sign-out.
+  const { user } = await payload.auth({ headers: await nextHeaders() })
+  if (user?.collection === CUSTOMERS) {
+    await logoutOperation({
+      collection: payload.collections[CUSTOMERS],
+      req: await createLocalReq({ user }, payload),
+    })
+  }
+
   const cookie = generateExpiredPayloadCookie({
     collectionAuthConfig: payload.collections[CUSTOMERS].config.auth,
     cookiePrefix: payload.config.cookiePrefix,

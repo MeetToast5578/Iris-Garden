@@ -11,6 +11,7 @@ import {
   readIdTokenClaims,
 } from '@/lib/google'
 import { getPayloadClient } from '@/lib/payload'
+import { safeRedirect } from '@/lib/validate'
 
 const failTo = (request: Request, reason: string) =>
   NextResponse.redirect(new URL(`/account/login?error=${reason}`, request.url))
@@ -95,6 +96,5 @@ export async function GET(request: Request) {
   const returnTo = store.get('oauth-return-to')?.value
   store.delete('oauth-return-to')
 
-  const destination = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/account'
-  return NextResponse.redirect(new URL(destination, request.url))
+  return NextResponse.redirect(new URL(safeRedirect(returnTo), request.url))
 }

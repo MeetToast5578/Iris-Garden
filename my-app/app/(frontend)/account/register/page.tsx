@@ -6,6 +6,7 @@ import { RegisterForm } from '@/components/AccountForms'
 import { GoogleButton } from '@/components/GoogleButton'
 import { getCurrentCustomer } from '@/lib/auth'
 import { googleOAuthConfigured } from '@/lib/google'
+import { safeRedirect } from '@/lib/validate'
 
 export const metadata: Metadata = { title: 'Create an account', robots: { index: false } }
 
@@ -15,7 +16,7 @@ export default async function RegisterPage({
   searchParams: Promise<{ redirectTo?: string }>
 }) {
   const { redirectTo } = await searchParams
-  if (await getCurrentCustomer()) redirect(redirectTo || '/account')
+  if (await getCurrentCustomer()) redirect(safeRedirect(redirectTo))
 
   return (
     <div className="shell max-w-md py-16">

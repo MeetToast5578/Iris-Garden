@@ -17,5 +17,9 @@ export const PHONE_INPUT_PATTERN = '[0-9+()\-\s]{7,20}'
 
 export const isStrongEnoughPassword = (value: string) => value.length >= 8
 
+/** Only ever send people to paths on this site; browsers read `//x` and `/\x` as another host. */
+export const safeRedirect = (value: string | null | undefined) =>
+  value && /^\/(?![/\\])/.test(value) ? value : '/account'
+
 /** Upper bound on a single cart line, enforced in the store and again on the server. */
 export const MAX_QUANTITY = 99

@@ -7,6 +7,7 @@ import { GoogleButton } from '@/components/GoogleButton'
 import { getCurrentCustomer } from '@/lib/auth'
 import { AUTH_ERRORS } from '@/lib/authErrors'
 import { googleOAuthConfigured } from '@/lib/google'
+import { safeRedirect } from '@/lib/validate'
 
 export const metadata: Metadata = { title: 'Sign in', robots: { index: false } }
 
@@ -16,7 +17,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; redirectTo?: string }>
 }) {
   const { error, redirectTo } = await searchParams
-  if (await getCurrentCustomer()) redirect(redirectTo || '/account')
+  if (await getCurrentCustomer()) redirect(safeRedirect(redirectTo))
 
   return (
     <div className="shell max-w-md py-16">

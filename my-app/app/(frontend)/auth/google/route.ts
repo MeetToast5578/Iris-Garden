@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 import { googleOAuthConfigured, googleRedirectUri, OAUTH_STATE_COOKIE } from '@/lib/google'
+import { safeRedirect } from '@/lib/validate'
 
 /** Step one: bounce the visitor to Google with a CSRF state we can check later. */
 export async function GET(request: Request) {
@@ -22,8 +23,8 @@ export async function GET(request: Request) {
   })
 
   const returnTo = new URL(request.url).searchParams.get('redirectTo')
-  if (returnTo?.startsWith('/') && !returnTo.startsWith('//')) {
-    store.set('oauth-return-to', returnTo, {
+  if (returnTo) {
+    store.set('oauth-return-to', safeRedirect(returnTo), {
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
