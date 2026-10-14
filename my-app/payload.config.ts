@@ -59,16 +59,16 @@ export default buildConfig({
   // The bucket is private; Payload streams files through /api/media/file/*.
   plugins: [
     s3Storage({
-      enabled: Boolean(process.env.AWS_ACCESS_KEY_ID),
+      enabled: Boolean(process.env.S3_ACCESS_KEY_ID),
       collections: { media: true },
       bucket: process.env.S3_BUCKET || '',
       config: {
-        endpoint: process.env.AWS_ENDPOINT_URL_S3,
-        region: process.env.AWS_REGION,
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
         forcePathStyle: true,
         credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
       },
     }),

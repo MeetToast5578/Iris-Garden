@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "payload migrate && if [ -n \"$SEED_ON_BUILD\" ]; then payload run ./scripts/seed.ts; fi && next build",
     "start": "next start",
     "lint": "eslint",
     "payload": "payload",
