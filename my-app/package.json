@@ -15,6 +15,8 @@
     "check": "payload run ./scripts/check-lib.ts && payload run ./scripts/check-checkout.ts"
   },
   "dependencies": {
+    "@neon/config": "^1.9.1",
+    "@neon/env": "^1.6.2",
     "@payloadcms/db-sqlite": "^3.89.0",
     "@payloadcms/email-nodemailer": "^3.89.0",
     "@payloadcms/next": "^3.89.0",
