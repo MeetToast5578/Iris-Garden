@@ -1,10 +1,10 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
@@ -29,11 +29,9 @@ export default buildConfig({
   collections: [Products, Categories, Media, Orders, Customers, ContactMessages, Users],
   globals: [Settings],
   editor: lexicalEditor(),
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URI || 'file:./iris-garden.db',
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    },
+  // DATABASE_URI is Neon's pooled (-pooler) string, so keep the client pool small.
+  db: postgresAdapter({
+    pool: { connectionString: process.env.DATABASE_URI, max: 5 },
   }),
   secret: process.env.PAYLOAD_SECRET || '',
   graphQL: { disable: true },
@@ -57,12 +55,22 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  // Vercel's disk is read-only, so uploads go to Blob when a token is set.
+  // Vercel's disk is read-only, so uploads go to Neon Object Storage (S3 API) when its keys are set.
+  // The bucket is private; Payload streams files through /api/media/file/*.
   plugins: [
-    vercelBlobStorage({
-      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    s3Storage({
+      enabled: Boolean(process.env.AWS_ACCESS_KEY_ID),
       collections: { media: true },
-      token: process.env.BLOB_READ_WRITE_TOKEN || '',
+      bucket: process.env.S3_BUCKET || '',
+      config: {
+        endpoint: process.env.AWS_ENDPOINT_URL_S3,
+        region: process.env.AWS_REGION,
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+        },
+      },
     }),
   ],
   sharp,
