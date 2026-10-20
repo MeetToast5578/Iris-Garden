@@ -110,6 +110,20 @@ count as local.
   before merge. It only adds a table and two nullable columns.
 - Fixed windows allow up to 2x `max` across a boundary (noted in code).
 
+**Follow-up after the first preview build failed (item 5 and item 1):** the migration ran
+on Neon (`Migrated: 20261020_111405_rate_limits`) but `next build` then failed prerendering
+`/about` with `column "_objectkey" does not exist` on `media`. Payload 3.91's S3 storage
+plugin adds an `_objectKey` field only when the plugin is enabled. I had generated the
+migration with no S3 keys set, so the plugin was off and the column was missing from the
+migration, while production has S3 on. The first migration was already applied, so it is
+not edited. A second migration, `20261020_111836_media_object_key`, adds the nullable
+`media._objectkey` column; it was generated with dummy S3 variables set, and
+`payload-types.ts` was regenerated in the same mode (adds `_objectKey`). The import map is
+unchanged in that mode. README now says to set the S3 variables when running
+`migrate:create`. Lesson: for this repo, schema output depends on `S3_ACCESS_KEY_ID`.
+The production site itself was not affected: the failed preview was never promoted, and
+the current production code ignores the extra table and columns.
+
 ## 6. Order numbers from random bits — done
 
 `collections/Orders.ts`: `IG-<time><3 random chars>` -> `IG-` plus 10 hex characters from

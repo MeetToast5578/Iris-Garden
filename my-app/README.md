@@ -54,6 +54,10 @@ Whenever you edit a collection or global:
 1. `npm run generate:types` — the storefront is typed against `payload-types.ts`.
 2. `npx payload migrate:create <name>` and commit the new file in `migrations/`.
 
+Generate migrations with the S3 variables set (dummy values are fine): the storage
+plugin adds an `_objectKey` column to `media` only when it is enabled, so a migration
+made without them leaves production without that column and the build fails.
+
 Production never relies on Payload's dev-time schema push. Vercel runs
 `payload migrate` before every build, so the migration is applied as part of the
 deploy. Upgrading Payload can also need a migration (3.89 -> 3.91 added
