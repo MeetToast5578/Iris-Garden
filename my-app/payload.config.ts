@@ -14,6 +14,7 @@ import { ContactMessages } from './collections/ContactMessages'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
 import { Products } from './collections/Products'
+import { RateLimits } from './collections/RateLimits'
 import { Users } from './collections/Users'
 import { Settings } from './globals/Settings'
 
@@ -26,7 +27,7 @@ export default buildConfig({
       titleSuffix: '— Iris Garden',
     },
   },
-  collections: [Products, Categories, Media, Orders, Customers, ContactMessages, Users],
+  collections: [Products, Categories, Media, Orders, Customers, ContactMessages, RateLimits, Users],
   globals: [Settings],
   editor: lexicalEditor(),
   // DATABASE_URI is Neon's pooled (-pooler) string, so keep the client pool small.
