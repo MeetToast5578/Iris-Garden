@@ -182,6 +182,22 @@ warning), the full env var table, the one-time `SEED_ON_BUILD` flow, and a refre
 
 ---
 
+## Production after merge (PR #3, commit 4e9cdf5) — verified
+
+- Deployment `dpl_AuV3tBA…` went `Ready` (about 95 seconds). The two migrations were already
+  applied by the preview builds, so the production build had nothing to migrate.
+- Runtime errors for the 15 minutes after: only the known `pg` `sslmode` warning.
+- Loaded the live site with Playwright: `/`, `/shop`, `/shop/roses`, `/about`, `/contact`,
+  `/delivery`, `/account/login`, `/order/lookup`, `/admin/login` all returned 200 with no broken
+  images and no console, page or HTTP errors.
+- **Item 7 confirmed:** no page emits an `og:url` any more (it was the site root on every
+  page); `/shop/roses` and `/product/calla-trio` emit `<link rel="canonical">` with their own
+  URL.
+- Not checked: a real checkout, sign-in, Google login and email (these create or touch real
+  records, and SMTP is not configured).
+
+---
+
 ## Still open
 
 - **Item 11** (`npm run check` against a throwaway Neon branch): needs your OK before I
