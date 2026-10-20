@@ -16,8 +16,6 @@
     "check": "payload run ./scripts/check-lib.ts && payload run ./scripts/check-checkout.ts"
   },
   "dependencies": {
-    "@neon/config": "^1.9.1",
-    "@neon/env": "^1.6.2",
     "@payloadcms/db-postgres": "3.91.0",
     "@payloadcms/email-nodemailer": "3.91.0",
     "@payloadcms/next": "3.91.0",
@@ -32,6 +30,7 @@
     "sharp": "0.35.5"
   },
   "devDependencies": {
+    "@neon/config": "^1.9.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
