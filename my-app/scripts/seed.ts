@@ -336,7 +336,15 @@ const fetchPhoto = async (id: string, width: number) => {
   return Buffer.from(await response.arrayBuffer())
 }
 
+const DEFAULT_PASSWORD = 'changeme123'
+
 const seed = async () => {
+  // Checked before anything is deleted: a remote database must never get the repo's default password.
+  const isLocalDatabase = /@(localhost|127\.0\.0\.1)[:/]/.test(process.env.DATABASE_URI ?? '')
+  if (!isLocalDatabase && !process.env.SEED_PASSWORD) {
+    throw new Error('Set SEED_PASSWORD (and SEED_EMAIL) before seeding a database that is not localhost.')
+  }
+
   const payload = await getPayload({ config })
 
   payload.logger.info('Clearing products, categories and media…')
@@ -425,7 +433,7 @@ const seed = async () => {
   })
 
   const email = process.env.SEED_EMAIL || 'admin@irisgarden.com'
-  const password = process.env.SEED_PASSWORD || 'changeme123'
+  const password = process.env.SEED_PASSWORD || DEFAULT_PASSWORD
   const existing = await payload.find({
     collection: 'users',
     where: { email: { equals: email } },
@@ -434,7 +442,10 @@ const seed = async () => {
 
   if (existing.docs.length === 0) {
     await payload.create({ collection: 'users', data: { email, password, name: 'Studio admin' } })
-    payload.logger.info(`Admin user created — ${email} / ${password}`)
+    // Only the repo's public default is safe to print; a real password must not reach build logs.
+    payload.logger.info(
+      `Admin user created — ${email}${password === DEFAULT_PASSWORD ? ` / ${password}` : ''}`,
+    )
   } else {
     payload.logger.info(`Admin user ${email} already exists, left as is.`)
   }

@@ -22,7 +22,7 @@ export function OrderLookupForm() {
           id="lookup-number"
           name="orderNumber"
           required
-          placeholder="IG-XXXXXXXXX"
+          placeholder="IG-XXXXXXXXXX"
           className="field"
         />
       </div>

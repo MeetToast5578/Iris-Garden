@@ -13,7 +13,8 @@ export const Media: CollectionConfig = {
   },
   upload: {
     staticDir: 'public/media',
-    mimeTypes: ['image/*'],
+    // Raster only: SVG can carry script and Payload has had sanitisation advisories for it.
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'],
     focalPoint: true,
     imageSizes: [
       { name: 'thumbnail', width: 400, height: 400, position: 'centre' },

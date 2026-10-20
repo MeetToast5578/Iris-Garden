@@ -53,9 +53,8 @@ export const Orders: CollectionConfig = {
     beforeChange: [
       ({ data, operation }) => {
         if (operation === 'create' && !data.orderNumber) {
-          const stamp = Date.now().toString(36).toUpperCase()
-          const noise = Math.random().toString(36).slice(2, 5).toUpperCase()
-          data.orderNumber = `IG-${stamp}${noise}`
+          // 40 random bits, not the clock, so a number cannot be guessed from when the order was placed.
+          data.orderNumber = `IG-${crypto.randomUUID().replaceAll('-', '').slice(0, 10).toUpperCase()}`
         }
         return data
       },

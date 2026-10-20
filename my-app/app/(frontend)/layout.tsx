@@ -25,7 +25,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Iris Garden',
-    url: siteUrl,
     images: ['/logo.png'],
   },
 }
