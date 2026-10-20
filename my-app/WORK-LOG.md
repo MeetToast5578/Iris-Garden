@@ -38,6 +38,9 @@ via `@payloadcms/plugin-cloud-storage`; `esbuild` (moderate) comes via `drizzle-
 build-time packages, not code that handles customer requests. Re-check after the next
 Payload release.
 
+**Also checked:** the regenerated lockfile left unrelated packages unchanged (tailwindcss
+4.3.3, typescript 5.9.3, eslint 9.39.5, react and react-dom 19.2.8, graphql 16.14.2).
+
 **Not verified:** a full `next build` and `npm run check` need a database; the Vercel
 preview build on the PR is the check for those.
 
