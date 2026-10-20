@@ -158,10 +158,34 @@ warning), the full env var table, the one-time `SEED_ON_BUILD` flow, and a refre
 
 ---
 
+## Preview verification (deployment for commit 6a09e36) — passed
+
+- **Build:** the first preview build (aa9b207) failed as described under item 5; the second
+  (6a09e36, with the `_objectkey` migration) built and went `Ready`.
+- **Pages:** `/`, `/shop` and `/admin/login` returned 200 with no browser console or page
+  errors (Playwright against the preview).
+- **Runtime errors (last 30 min):** only the known `pg` `sslmode` warning (user task 11 in
+  `TASKS-YOU.md`). No import-map error, no "Rate limiter failed" log line.
+- **Rate limiter, live on Neon:** 12 order-lookup attempts from one IP in one window:
+  1 to 10 answered "We could not find an order...", 11 and 12 answered "Too many
+  attempts. Please try again in a few minutes." The `rate_limits` row for that IP shows
+  `count = 12`. No orders or customers were touched (the form only reads).
+- **A wrong reading, for the record:** my first run showed the 11th attempt as allowed. The
+  script read the previous attempt's message before the response arrived (the table showed
+  `count = 11`, which the limiter had already refused). A second single attempt landed on a
+  different egress IP of the sandbox's proxy and so started a fresh count. The third run
+  waited for each response and is the one that counts.
+- **Side effect:** the tests left about 3 small rows in the production `rate_limits` table
+  (keys `order-lookup:<ip>`). They are swept automatically after 24 hours.
+- **Not checked:** og:url / canonical output in view-source, a real checkout, sign-in and
+  Google login (these create or touch real records).
+
+---
+
 ## Still open
 
-- **Item 11** (`npm run check` against a throwaway Neon branch) and **item 12** (read-only
-  row counts in Neon): need your OK before I touch Neon.
+- **Item 11** (`npm run check` against a throwaway Neon branch): needs your OK before I
+  create a branch. **Item 12** (row counts in Neon): I ran only a read of `rate_limits`;
+  products, categories, media, orders and users have not been counted.
 - Everything in `TASKS-YOU.md`.
-- A full `next build`, `npm run check` and a live test of the limiter have not been run.
-  The Vercel preview build for the PR is the first real build of these changes.
+- `npm run check` and a local `next build` have not been run (they need a database).
