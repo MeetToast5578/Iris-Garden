@@ -41,7 +41,7 @@ export function Header({ categories, phone }: { categories: NavCategory[]; phone
             width={44}
             height={44}
             priority
-            className="h-11 w-11 rounded-full object-cover ring-1 ring-line"
+            className="h-11 w-11 object-contain"
           />
           <span className="font-display text-xl tracking-tight">Iris Garden</span>
         </Link>
